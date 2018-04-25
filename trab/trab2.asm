@@ -1,9 +1,16 @@
 	.data
 	.word
 naoPrimo:	.asciiz "O valor inserido não é primo."
-	
+
 	.text
 	
+	li $v0, 5		#Leitura do primeiro inteiro
+	syscall
+	move $t0, $v0		# Salva o primeiro inteiro em $t0
+	
+	li $v0, 5
+	syscall			# Leitura do segundo inteiro
+	move $t1, $v0		# Salva o segundo inteiro em $	t1
 
 	li $v0, 5
 	syscall			# Leitura do terceiro inteiro
@@ -20,7 +27,7 @@ naoPrimo:	.asciiz "O valor inserido não é primo."
 	move $t6, $t2		# copia o conteúdo da terceira entrada para $t6
 	add $t6, $t6, 1		# $t6 = $t2 + 1
 	j checa_primo
-	
+
 checa_primo:
 	beq $t3, $t7, fim_checagem  	# while $t3 < $t7
 	div $t2, $t3			# $t2 / $t3
@@ -59,5 +66,8 @@ fim_sqrt:
 	jr $ra
 	
 continua:
+	
+	li $t3, 0x01
+
 	li $v0, 10
 	syscall
