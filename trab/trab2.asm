@@ -66,8 +66,29 @@ fim_sqrt:
 	jr $ra
 	
 continua:
-	
-	li $t3, 0x01
+	li $t3, 0x01			# máscara para captura dos bits
+	j captura
 
+captura:
+	beq $t3, $zero, fim		# verifica se já foram percorridos todos os bits do expoente
+	and $t4, $t3, $t1		# captura do bit
+	beq $t4, 1, contabiliza		# se o bit valer 1, faz a exponenciação
+	sll $t3, $t3, 1			# shift da máscara
+	j captura
+	
+contabiliza:
+	li $t5, 0			# contador de multiplicações
+	jal exponenciacao		# chama função de cálculo de exponenciação
+	sll $t3, $t3, 1			# shift da máscara
+	j captura
+	
+exponenciacao:
+	beq $t5, $t4, retorno_exponenciacao 	# verifica se já terminou de fazer a exponenciação
+	
+	
+retorno_exponenciacao:
+	j $ra
+
+fim:
 	li $v0, 10
 	syscall
