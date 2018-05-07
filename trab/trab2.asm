@@ -66,29 +66,40 @@ fim_sqrt:
 	jr $ra
 	
 continua:
-	li $t3, 0x01			# máscara para captura dos bits
-	j captura
+	move $s1, $t0
+	move $s2, $t1
+	move $s3, $t2	
+	j exp
 
-captura:
-	beq $t3, $zero, fim		# verifica se já foram percorridos todos os bits do expoente
-	and $t4, $t3, $t1		# captura do bit
-	beq $t4, 1, contabiliza		# se o bit valer 1, faz a exponenciação
-	sll $t3, $t3, 1			# shift da máscara
-	j captura
-	
-contabiliza:
-	li $t5, 0			# contador de multiplicações
-	jal exponenciacao		# chama função de cálculo de exponenciação
-	sll $t3, $t3, 1			# shift da máscara
-	j captura
-	
-exponenciacao:
-	beq $t5, $t4, retorno_exponenciacao 	# verifica se já terminou de fazer a exponenciação
-	
-	
-retorno_exponenciacao:
-	j $ra
-
+exp:
+    li $s4, 1  #começando s4 com 1 registrador que vai comparar o numero 
+    and $t3, $s4, $s2   #comparando bit a bit se s4  vai ser 0
+    li $s6, 1  #começando s6 com 1 registrdor que ira multipicar todos os restos
+    li $t2, 2 #carregando 2 em t2
+    div $s1,$s3   #divide o expoente pelo modulo pela primeira vez
+    mfhi $s5    #guarda o resto em S5
+    mult $s5, $s6	# multiplicando o resto com o anterior
+    mflo $s6
+    bne $s2, $zero, calc_exp #caso o expoente for  diferente zero ele vai para calc_exp
+    
+calc_exp:
+    slt $t1, $s4, $s2  #se o numero na posição do expoente for menor que o expoente recebe 1
+    beq $t1, $zero, fim  # se o expoente na posição for maior que o dado vai pra continue
+    mult $t2, $s4	#multiplicando para voltar a contagem
+    mflo $s4		#salvando o resutado em S4
+    mult $s5, $s5
+    mflo $s5
+    div $s5,$s3		#dividindo os restos anteriormente pelo modulo
+    mfhi $s5		#colocando o resto em S5
+    and $t3, $s4, $s2   #comparando bit a bit se s4  vai ser 0
+    beq $t3, $zero, calc_exp
+    mult $s5, $s6	# multiplicando o resto com o anterior
+    mflo $s6
+    j calc_exp    #voltar para o loop
+    
 fim:
+	div $s6, $s3
+	mfhi $s6
+
 	li $v0, 10
 	syscall
