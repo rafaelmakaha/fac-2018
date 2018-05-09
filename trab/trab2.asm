@@ -11,6 +11,7 @@ naoPrimo:	.asciiz "O valor inserido não é primo."
 	li $v0, 5
 	syscall			# Leitura do segundo inteiro
 	move $t1, $v0		# Salva o segundo inteiro em $	t1
+	#li $t1, 0xFFFFFFFF
 
 	li $v0, 5
 	syscall			# Leitura do terceiro inteiro
@@ -53,7 +54,7 @@ nao_primo:
 	
 	li $v0, 10			# finaliza o programa
 	syscall
-	
+		
 sqrt:					#encontrará a parte inteira da raiz quadrada
 	slti $t4, $t6, 1		# ( aux < 1 )
 	bne $t4, $zero, fim_sqrt		# if not( aux < 1 ), fim
@@ -61,45 +62,53 @@ sqrt:					#encontrará a parte inteira da raiz quadrada
 	add $t3, $t3, 1			# cont++
 	sub $t6, $t6, $t7		# total -= aux
 	j sqrt
-	
 fim_sqrt:
 	jr $ra
-	
-continua:
-	move $s1, $t0
-	move $s2, $t1
-	move $s3, $t2	
-	j exp
 
-exp:
-    li $s4, 1  #começando s4 com 1 registrador que vai comparar o numero 
-    and $t3, $s4, $s2   #comparando bit a bit se s4  vai ser 0
-    li $s6, 1  #começando s6 com 1 registrdor que ira multipicar todos os restos
-    li $t2, 2 #carregando 2 em t2
-    div $s1,$s3   #divide o expoente pelo modulo pela primeira vez
-    mfhi $s5    #guarda o resto em S5
-    mult $s5, $s6	# multiplicando o resto com o anterior
-    mflo $s6
-    bne $s2, $zero, calc_exp #caso o expoente for  diferente zero ele vai para calc_exp
-    
-calc_exp:
-    slt $t1, $s4, $s2  #se o numero na posição do expoente for menor que o expoente recebe 1
-    beq $t1, $zero, fim  # se o expoente na posição for maior que o dado vai pra continue
-    mult $t2, $s4	#multiplicando para voltar a contagem
-    mflo $s4		#salvando o resutado em S4
-    mult $s5, $s5
-    mflo $s5
-    div $s5,$s3		#dividindo os restos anteriormente pelo modulo
-    mfhi $s5		#colocando o resto em S5
-    and $t3, $s4, $s2   #comparando bit a bit se s4  vai ser 0
-    beq $t3, $zero, calc_exp
-    mult $s5, $s6	# multiplicando o resto com o anterior
-    mflo $s6
-    j calc_exp    #voltar para o loop
-    
+
+continua:
+	li $t3, 0x01 		# Máscara para varredura dos bits
+	j msb
+#	move $s1, $t0	
+#	move $s2, $t1	
+#	move $s3, $t2	
+#	j exp
+
+
+msb:				# encontrando o bit mais significativo
+	sgt $t4, $t3, $t1	# if ( bit_atual > expoente )
+	beq $t4, 1, continua_2	
+	sll $t3, $t3, 1		# Avança um bit com a máscara
+	j msb
+
+continua_2:
+	srl $t3, $t3, 1 	# Posiciona corretamente a máscara com o bit mais significativo
+	move $t4, $t0		# Iniciando $t4 para armazenar as multiplicações
+	srl $t3, $t3, 1		# shift devido a primeira iteração da exponenciação
+	j exponenciacao
+	
+exponenciacao:
+	beq $t3, $zero, fim		# verifica se ainda há bits a serem utilizados
+	and $t5, $t3, $t1		# fazer o and para verificar o bit atual
+	bne $t5, $zero, sqr_mult	# If ( $t5 != 0 ) ; square and multiply
+	mult $t4, $t4			# Else: square
+	mflo $t4
+	div $t4, $t2			# divisão do resto atual pelo número primo
+	mfhi $t4			# captura o resto da divisão em $t4
+	srl $t3, $t3, 1
+	j exponenciacao
+
+sqr_mult:
+	mult $t4, $t4			# $t4 ** 2
+	mflo $t4
+	mult $t4, $t0			# $t4 * base
+	mflo $t4
+	div $t4, $t2			# divisão do resto atual pelo número primo
+	mfhi $t4			# captura o resto da divisão em $t4
+	srl $t3, $t3, 1			# shift para o próximo bit do expoente
+	j exponenciacao
+
 fim:
-	div $s6, $s3
-	mfhi $s6
 
 	li $v0, 10
 	syscall
