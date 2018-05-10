@@ -36,6 +36,7 @@ le_inteiro:
 	syscall			# Leitura do terceiro inteiro
 	move $t2, $v0		# Passa o inteiro lido para o registrador $t2
 	
+preparação:
 	li $t3, 1		# $t3 == (cont)
 	move $t6, $t2		# $t6 recebe as subtrações (total)
 	li $t7, 1		# $t7 será o valor das subtrações (aux)
@@ -97,9 +98,9 @@ msb:				# encontrando o bit mais significativo
 	j msb
 
 bit_maximo:
-	li $t3, 10000000000000000000000000000000
-	move $t4, $t0
-	srl $t3, $t3, 1
+	li $t3, 10000000000000000000000000000000		# setagem da máscara caso ela tenha sido zerada 
+	move $t4, $t0						# Iniciando $t4 para armazenar as multiplicações
+	srl $t3, $t3, 1						# shift devido a primeira iteração da exponenciação1
 	j exponenciacao
 
 continua_2:
