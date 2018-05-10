@@ -1,18 +1,37 @@
 	.data
 	.word
+valor1:		.asciiz "Insira um valor para a base: "
+valor2: 	.asciiz "Insira um valor para o expoente: "
+valor3: 	.asciiz "Insira um valora supostamente primo: "
 naoPrimo:	.asciiz "O valor inserido não é primo."
+sucesso1:	.asciiz "A exponencial modular "
+sucesso2:	.asciiz " elevado a "
+sucesso3:	.asciiz " (mod "
+sucesso4:	.asciiz ") eh "
 
 	.text
+	
+le_inteiro:
+	la $a0, valor1		# Imprime mensagem de inserção
+	li $v0, 4
+	syscall 
 	
 	li $v0, 5		#Leitura do primeiro inteiro
 	syscall
 	move $t0, $v0		# Salva o primeiro inteiro em $t0
 	
+	la $a0, valor2		# Imprime mensagem de inserção
+	li $v0, 4
+	syscall 
+	
 	li $v0, 5
 	syscall			# Leitura do segundo inteiro
 	move $t1, $v0		# Salva o segundo inteiro em $	t1
-	#li $t1, 0xFFFFFFFF
 
+	la $a0, valor3		# Imprime mensagem de inserção
+	li $v0, 4
+	syscall 
+	
 	li $v0, 5
 	syscall			# Leitura do terceiro inteiro
 	move $t2, $v0		# Passa o inteiro lido para o registrador $t2
@@ -42,12 +61,12 @@ incrementa:
 	add $t5, $t5, 1		# divisores++
 	j checa_primo
 	
-fim_checagem:
+fim_checagem:				# Fim da verificação de número primo
 	li $t3, 0x02			
-	bne $t5, $t3, nao_primo		#verifica se possui apenas dois divisores
+	bne $t5, $t3, imprime_erro		# verifica se possui apenas dois divisores
 	j continua
 	
-nao_primo:
+imprime_erro:
 	la $a0, naoPrimo		# imprime mensagem de que não é primo
 	li $v0, 4
 	syscall
@@ -69,17 +88,19 @@ fim_sqrt:
 continua:
 	li $t3, 0x01 		# Máscara para varredura dos bits
 	j msb
-#	move $s1, $t0	
-#	move $s2, $t1	
-#	move $s3, $t2	
-#	j exp
-
 
 msb:				# encontrando o bit mais significativo
+	beq $t3, $zero bit_maximo
 	sgt $t4, $t3, $t1	# if ( bit_atual > expoente )
 	beq $t4, 1, continua_2	
 	sll $t3, $t3, 1		# Avança um bit com a máscara
 	j msb
+
+bit_maximo:
+	li $t3, 10000000000000000000000000000000
+	move $t4, $t0
+	srl $t3, $t3, 1
+	j exponenciacao
 
 continua_2:
 	srl $t3, $t3, 1 	# Posiciona corretamente a máscara com o bit mais significativo
@@ -88,7 +109,7 @@ continua_2:
 	j exponenciacao
 	
 exponenciacao:
-	beq $t3, $zero, fim		# verifica se ainda há bits a serem utilizados
+	beq $t3, $zero, imprime_saida		# verifica se ainda há bits a serem utilizados
 	and $t5, $t3, $t1		# fazer o and para verificar o bit atual
 	bne $t5, $zero, sqr_mult	# If ( $t5 != 0 ) ; square and multiply
 	mult $t4, $t4			# Else: square
@@ -108,7 +129,38 @@ sqr_mult:
 	srl $t3, $t3, 1			# shift para o próximo bit do expoente
 	j exponenciacao
 
-fim:
+imprime_saida:
+	la $a0, sucesso1		# mensagem de sucesso
+	li $v0, 4
+	syscall 
+	
+	move $a0, $t0			# impriminto inteiro
+	li $v0, 1
+	syscall
+	
+	la $a0, sucesso2		# mensagem de sucesso
+	li $v0, 4
+	syscall 
+	
+	move $a0, $t1			# impriminto inteiro
+	li $v0, 1
+	syscall
+	
+	la $a0, sucesso3		# mensagem de sucesso
+	li $v0, 4
+	syscall 
+	
+	move $a0, $t2			# impriminto inteiro
+	li $v0, 1
+	syscall
+	
+	la $a0, sucesso4		# mensagem de sucesso
+	li $v0, 4
+	syscall 
+	
+	move $a0, $t4			# impriminto inteiro
+	li $v0, 1
+	syscall
 
 	li $v0, 10
 	syscall
